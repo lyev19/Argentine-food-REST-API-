@@ -1,0 +1,26 @@
+{
+  "name": "argentine-food-rest-api-",
+  "version": "1.0.0",
+  "description": "REST API with mysql as DB",
+  "main": "index.js","type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": " nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyev19/Argentine-food-REST-API-.git"
+  },
+  "author": "Leon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lyev19/Argentine-food-REST-API-/issues"
+  },
+  "homepage": "https://github.com/lyev19/Argentine-food-REST-API-#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.3.3",
+    "nodemon": "^2.0.20"
+  }
+}

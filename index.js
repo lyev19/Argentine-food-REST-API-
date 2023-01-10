@@ -2,17 +2,22 @@
 import  express from "express";
 import {pool} from "./src/mysqlFetch.js"
 import bcrypt from "bcryptjs"
-
+import cors from "cors"
 const app = express();
 app.use(express.json())
 
-let sql= `SELECT * FROM comida.Grasas`
+let sql= `SELECT * FROM food.Grasas`
 
+// const cors = require('cors');
+// app.use(cors({
+//     origin: 'DIRECCION'
+// }));
 
+ app.use(cors( {origin: '*'}));
 
 app.use(function(req, res, next) {
    res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
-   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+   res.header("Access-Control-Allow-Headers", "Origin", "X-Requested-With", "Content-Type", "Accept");
    next();
  });
 
@@ -22,7 +27,7 @@ app.get("/all",async (req,res)=>{
    
     let result=[]
     for(let i=0;i<tables.length;i++){
-      let val = await pool.query(`SELECT * FROM comida.${tables[i]}`)
+      let val = await pool.query(`SELECT * FROM food.${tables[i]}`)
       result.push(...val[0])
     }
    
@@ -32,7 +37,7 @@ app.get("/all",async (req,res)=>{
 
 app.get("/vegetables/:id", async (req,res)=>{
     
-   const value = await pool.query(`SELECT * FROM comida.Vegetales`)
+   const value = await pool.query(`SELECT * FROM food.Vegetales`)
    if(req.params.id=="all"){
    console.log(value[0][0])
     res.json(value[0])
@@ -46,7 +51,7 @@ app.get("/vegetables/:id", async (req,res)=>{
 
 app.get("/carnes/:id", async (req,res)=>{
     
-    const value = await pool.query(`SELECT * FROM comida.Carnes`)
+    const value = await pool.query(`SELECT * FROM food.Carnes`)
     if(req.params.id=="all"){
      res.json(value[0])
     } 
@@ -59,7 +64,7 @@ app.get("/carnes/:id", async (req,res)=>{
 
  app.get("/grasas/:id", async (req,res)=>{
     
-    const value = await pool.query(`SELECT * FROM comida.Grasas`)
+    const value = await pool.query(`SELECT * FROM food.Grasas`)
     if(req.params.id=="all"){
      res.json(value[0])
     } 
@@ -70,7 +75,7 @@ app.get("/carnes/:id", async (req,res)=>{
 
  app.get("/frutas/:id", async (req,res)=>{
     
-    const value = await pool.query(`SELECT * FROM comida.Frutas`)
+    const value = await pool.query(`SELECT * FROM food.Frutas`)
     if(req.params.id=="all"){
      res.json(value[0])
     } 
@@ -80,7 +85,7 @@ app.get("/carnes/:id", async (req,res)=>{
  
  app.get("/lacteos/:id", async (req,res)=>{
     
-    const value = await pool.query(`SELECT * FROM comida.Lacteos`)
+    const value = await pool.query(`SELECT * FROM food.Lacteos`)
     if(req.params.id=="all"){
      res.json(value[0])
     } 
@@ -90,7 +95,7 @@ app.get("/carnes/:id", async (req,res)=>{
 
  app.get("/cereales/:id", async (req,res)=>{
     
-    const value = await pool.query(`SELECT * FROM comida.Cereales`)
+    const value = await pool.query(`SELECT * FROM food.Cereales`)
     if(req.params.id=="all"){
      res.json(value[0])
     } 
@@ -100,7 +105,7 @@ app.get("/carnes/:id", async (req,res)=>{
  
  app.get("/pescados/:id", async (req,res)=>{
     
-    const value = await pool.query(`SELECT * FROM comida.Pescados`)
+    const value = await pool.query(`SELECT * FROM food.Pescados`)
     if(req.params.id=="all"){
      res.json(value[0])
     } 
@@ -109,20 +114,32 @@ app.get("/carnes/:id", async (req,res)=>{
  })
  
  
- app.get("/login-request/",async (req,res)=>{
-   console.log( req.body[0].username )
-   const result = await pool.query (`SELECT username,email FROM comida.users WHERE (username = "${req.body[0].username}" OR email = "${req.body[0].username}") AND  passwords = "${req.body[0].passwords}" `)
-   res.json(result[0])
-
+ app.post("/login/",async (req,res)=>{
+   console.log( req.body.passwords )
+   
+   const password = req.body.passwords
+   var comparing = await pool.query (`SELECT passwords FROM food.users WHERE (username = "${req.body.username}" OR email = "${req.body.username}")`)
+   comparing=comparing[0][0].passwords
+   const result= await validate(password, comparing)
+   
+   if(result){
+      console.log("succesfull signin")
+      res.json({"login":"success"})
+   }
+   else{
+     console.log("incorrect password")
+     res.json({"login":"failure"})
+   }
+   
  })
 app.post("/login-request",async(req,res)=>{
    
-   const password = await bcrypt.hash(req.body[0].passwords,8);
+   const password = await bcrypt.hash(req.body.passwords,8);
    console.log(req.body)
-   const ask = await pool.query (`SELECT username,email FROM comida.users WHERE (username = "${req.body[0].username}" OR email = "${req.body[0].email}")`);
+   const ask = await pool.query (`SELECT username,email FROM food.users WHERE (username = "${req.body.username}" OR email = "${req.body.email}")`);
    if(JSON.stringify(ask[0]) === "[]"){
-      const result = await pool.query( ` insert into comida.users (username,email,passwords,join_date)
-      values ("${req.body[0].username}","${req.body[0].email}","${password}","${date()}")`)
+      const result = await pool.query( ` insert into food.users (username,email,passwords,join_date)
+      values ("${req.body.username}","${req.body.email}","${password}","${date()}")`)
       res.json([{"result":"user succesfully signed in"}])
    }
    else{
@@ -134,6 +151,14 @@ app.post("/login-request",async(req,res)=>{
 
 app.listen(3001);
 console.log("hosted on port 3001")
+
+async function validate (password,hash){
+
+   const result = await bcrypt.compare(password,hash)
+   console.log(result)
+   return result
+   
+}
 
 
 function date (){

@@ -8,11 +8,6 @@ app.use(express.json())
 
 let sql= `SELECT * FROM food.Grasas`
 
-// const cors = require('cors');
-// app.use(cors({
-//     origin: 'DIRECCION'
-// }));
-
  app.use(cors( {origin: '*'}));
 
 app.use(function(req, res, next) {
@@ -118,19 +113,41 @@ app.get("/carnes/:id", async (req,res)=>{
    console.log( req.body.passwords )
    
    const password = req.body.passwords
-   var comparing = await pool.query (`SELECT passwords FROM food.users WHERE (username = "${req.body.username}" OR email = "${req.body.username}")`)
-   comparing=comparing[0][0].passwords
-   const result= await validate(password, comparing)
+   var comparing = await pool.query (`SELECT passwords FROM food.users WHERE ( username = "${req.body.username}" AND email = "${req.body.email}")`)
    
-   if(result){
-      console.log("succesfull signin")
-      res.json({"login":"success"})
+   console.log(comparing[0])
+   
+   if(comparing[0].length===0){
+      console.log("incorrect email")
+      res.json({"login":"failure"})
+      res.end()
    }
    else{
-     console.log("incorrect password")
-     res.json({"login":"failure"})
-   }
+      comparing=comparing[0][0].passwords
+      const result= await validate(password, comparing)
    
+      if(result){
+         console.log("succesfull signin")
+         res.json({"login":"success"})
+      }
+      else{
+        console.log("incorrect password")
+        res.json({"login":"failure"})
+      }
+   }
+
+
+
+  
+   
+
+   // {
+   //    "passwords": "1234",
+   //    "email": "tumama420@gmail.com",
+   //    "name": "Leonidas"
+   //  }
+
+
  })
 app.post("/login-request",async(req,res)=>{
    

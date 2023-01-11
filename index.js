@@ -110,7 +110,7 @@ app.get("/carnes/:id", async (req,res)=>{
  
  
  app.post("/login/",async (req,res)=>{
-   console.log( req.body.passwords )
+   console.log( req.body )
    
    const password = req.body.passwords
    var comparing = await pool.query (`SELECT passwords FROM food.users WHERE ( username = "${req.body.username}" AND email = "${req.body.email}")`)
@@ -188,3 +188,5 @@ var year = dateObj.getUTCFullYear();
 return year + "-" + month +"-"+ day ;
 
 }
+
+

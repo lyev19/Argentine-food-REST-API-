@@ -87,25 +87,45 @@ app.post("/login-request",async(req,res)=>{
   
 })
 
+app.post("/confirm",async(req,res)=>{
+   
+   const auth = req.body.authorization;
 
-app.use((req,res,next)=>{
-     console.log(req.headers)
-   const auth = req.headers.authorization
-   if (auth === null){
-      res.sendStatus(401)
-   }
-   jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
-      if(err) {console.log("invalid token")  
-      return res.sendStatus(404)}
-     
-      next()
-   })
+  jwt.verify( auth, process.env.TOKEN_SECRET, (err,user)=>{
+   if(err) {console.log("invalid token") 
+   res.json({"validate":false})
+  
+    }
+    res.json({"validate": true})
+  })
+
+   
   
 })
 
 
+
+
+
 //All DB info
 const tables = ["Vegetales","Carnes","Grasas","Frutas","Cereales","Lacteos","Pescados"]
+
+app.use((req,res,next)=>{
+   console.log(req.headers)
+ const auth = req.headers.authorization
+ if (auth === null){
+    res.sendStatus(401)
+ }
+ jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
+    if(err) {console.log("invalid token")  
+    return res.sendStatus(404)}
+   
+    next()
+ })
+
+})
+
+
 
 app.get("/all",async (req,res)=>{
    
@@ -204,13 +224,17 @@ app.get("/pescados/:id", async (req,res)=>{
 app.listen(3001);
 console.log("hosted on port 3001")
 
+//functions
+
 async function validate (password,hash){
 
    const result = await bcrypt.compare(password,hash)
-   console.log(result)
+   
    return result
    
 }
+
+
 function valid_input(param){
 
    if(param===undefined||param===""){

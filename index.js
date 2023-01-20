@@ -105,6 +105,65 @@ app.post("/confirm",async(req,res)=>{
 
 
 
+app.post("/menu",async(req,res)=>{
+   const user= await pool.query(`SELECT id  from food.users WHERE (username = "${req.body.user}" OR email= "${req.body.user}")`)
+  console.log(user)
+
+   const menu = await pool.query(`SELECT  menu.Id, menu.Date_input FROM 
+   food.user_has_menu  
+   JOIN menu ON user_has_menu.menu_id = menu.Id
+   JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
+   WHERE user_has_menu.user_id= ${user[0][0].id}`)
+
+   res.json(menu[0])
+
+
+})
+
+app.post("/menu-items", async(req,res)=>{
+    const menu = req.body.menu 
+    const request = await pool.query(`SELECT menu.Id, menu.Date_input, food1.*
+    FROM user_has_menu
+    JOIN menu ON user_has_menu.menu_id = menu.Id
+    JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
+    JOIN food1 ON menu_has_items.item_id = food1.id
+    WHERE user_has_menu.menu_id = ${menu}`)
+    console.log(request[0][0])
+    res.json(request)
+
+})
+
+app.post("/menu-add",async(req,res)=>{
+   const user = req.body.user
+   const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
+   const result = await pool.query(`INSERT into menu_info (Date_input) VALUES (${date()})`)
+   const menu_id = await pool.query(`SELECT Id from `)
+})
+
+
+
+
+app.post("/menu-all",async(req,res)=>{
+   const user = req.body.user
+   const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
+   const result = await pool.query(`SELECT menu.*, food1.*
+   FROM user_has_menu
+   JOIN menu ON user_has_menu.menu_id = menu.Id
+   JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
+   JOIN food1 ON menu_has_items.item_id = food1.id
+   WHERE user_has_menu.user_id = ${user_id[0][0].id}`)
+
+   res.json(result[0])
+  
+})
+
+app.post("/item-add",async(req,res)=>{
+     const item = req.body.item 
+     const menu = req.body.menu
+     const q = pool.query(`INSERT into food.menu_has_items(menu_id,item_id) VALUES (${menu},${item})`)
+     res.json(q)
+})
+
 
 
 //All DB info
@@ -216,6 +275,8 @@ app.get("/pescados/:id", async (req,res)=>{
    else
    res.json(value[0][req.params.id])
 })
+
+
 
 
 

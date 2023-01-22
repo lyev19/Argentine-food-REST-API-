@@ -13,14 +13,13 @@ import * as os from "os"
 const app = express();
 app.use(express.json())
 
-let sql= `SELECT * FROM food.Grasas`
 
- app.use(cors( {origin: '*'}));
+app.use(cors( {origin: '*'}));
 
 app.use(function(req, res, next) {
    res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
    res.header("Access-Control-Allow-Headers", "Origin", "X-Requested-With", "Content-Type", "Accept");
-   next();
+   next(); 
  });
 
 
@@ -112,7 +111,6 @@ app.post("/menu",async(req,res)=>{
    const menu = await pool.query(`SELECT  menu.Id, menu.Date_input FROM 
    food.user_has_menu  
    JOIN menu ON user_has_menu.menu_id = menu.Id
-   JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
    WHERE user_has_menu.user_id= ${user[0][0].id}`)
 
    res.json(menu[0])
@@ -145,14 +143,14 @@ app.post("/menu-add",async(req,res)=>{
 
 app.post("/menu-all",async(req,res)=>{
    const user = req.body.user
-   const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
+   const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" OR email = "${user}")` )   
    const result = await pool.query(`SELECT menu.*, food1.*
    FROM user_has_menu
    JOIN menu ON user_has_menu.menu_id = menu.Id
    JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
    JOIN food1 ON menu_has_items.item_id = food1.id
    WHERE user_has_menu.user_id = ${user_id[0][0].id}`)
-
+   console.log(result[0])
    res.json(result[0])
   
 })

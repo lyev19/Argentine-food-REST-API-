@@ -8,6 +8,7 @@ import * as fs from "fs"
 import * as os from "os"
 
 
+//Headers from fetch must contain jwt
 
 
 const app = express();
@@ -86,6 +87,13 @@ app.post("/login-request",async(req,res)=>{
   
 })
 
+
+
+
+
+
+
+
 app.post("/confirm",async(req,res)=>{
    
    const auth = req.body.authorization;
@@ -104,6 +112,22 @@ app.post("/confirm",async(req,res)=>{
 
 
 
+app.use((req,res,next)=>{
+   console.log(req.headers)
+ const auth = req.headers.authorization
+ if (auth === null){
+    res.sendStatus(401)
+ }
+ jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
+    if(err) {console.log("invalid token")  
+    return res.sendStatus(404)}
+   
+    next()
+ })
+
+})
+
+
 app.post("/menu",async(req,res)=>{
    const user= await pool.query(`SELECT id  from food.users WHERE (username = "${req.body.user}" OR email= "${req.body.user}")`)
   console.log(user)
@@ -120,7 +144,7 @@ app.post("/menu",async(req,res)=>{
 
 app.post("/menu-items", async(req,res)=>{
     const menu = req.body.menu 
-    const request = await pool.query(`SELECT menu.Id, menu.Date_input, food1.*
+    const request = await pool.query(`SELECT menu_has_items.weight, menu.Id, menu.Date_input, food1.*
     FROM user_has_menu
     JOIN menu ON user_has_menu.menu_id = menu.Id
     JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
@@ -133,18 +157,20 @@ app.post("/menu-items", async(req,res)=>{
 
 app.post("/menu-add",async(req,res)=>{
    const user = req.body.user
+   const date = req.body.date
    const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
-   const result = await pool.query(`INSERT into menu_info (Date_input) VALUES (${date()})`)
-   const menu_id = await pool.query(`SELECT Id from `)
+   const result = await pool.query(`INSERT into menu (Date_input) VALUES ("${date}")`)
+   const adding = await pool.query(`INSERT into user_has_menu(user_id,menu_id) VALUES (${user_id[0][0].id},${result[0].insertId})`)
+   //const menu_id = await pool.query(`SELECT Id from menu WHERE (Date_input=${date()})`)
+   res.json(result)
 })
-
-
 
 
 app.post("/menu-all",async(req,res)=>{
    const user = req.body.user
+   console.log(user)
    const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" OR email = "${user}")` )   
-   const result = await pool.query(`SELECT menu.*, food1.*
+   const result = await pool.query(`SELECT menu.*,menu_has_items.weight, food1.*
    FROM user_has_menu
    JOIN menu ON user_has_menu.menu_id = menu.Id
    JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
@@ -162,25 +188,35 @@ app.post("/item-add",async(req,res)=>{
      res.json(q)
 })
 
+app.delete("/menu:menu",async (req,res)=>{
+    const menu = req.params.menu
+    const request = await pool.query(`DELETE FROM user_has_menu WHERE (menu_id = ${menu}) `)
+    const request1 = await pool.query(`DELETE FROM menu WHERE (Id = ${menu}) `)
+    const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu})`)
+
+    res.json(request)
+})
+
+app.delete("/item",async (req,res)=>{
+   const item = req.body.item
+   const menu = req.body.menu
+   const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu} AND item_id = ${item})`)
+   res.json({"res":item})
+})
+
+
+
+
+
+
+
+
 
 
 //All DB info
 const tables = ["Vegetales","Carnes","Grasas","Frutas","Cereales","Lacteos","Pescados"]
 
-app.use((req,res,next)=>{
-   console.log(req.headers)
- const auth = req.headers.authorization
- if (auth === null){
-    res.sendStatus(401)
- }
- jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
-    if(err) {console.log("invalid token")  
-    return res.sendStatus(404)}
-   
-    next()
- })
 
-})
 
 
 
@@ -310,13 +346,12 @@ var dateObj = new Date();
 var month = dateObj.getUTCMonth() + 1; //months from 1-12
 var day = dateObj.getUTCDate();
 var year = dateObj.getUTCFullYear();
-
 return year + "-" + month +"-"+ day ;
 
 }
 
 function generateAWT (username){
-   return jwt.sign({"username":username}, process.env.TOKEN_SECRET,{expiresIn:60*60})
+   return jwt.sign({"username":username}, process.env.TOKEN_SECRET,{expiresIn:600*60})
 }
 
 

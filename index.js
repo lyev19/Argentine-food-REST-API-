@@ -184,12 +184,14 @@ app.post("/menu-all",async(req,res)=>{
 app.post("/item-add",async(req,res)=>{
      const item = req.body.item 
      const menu = req.body.menu
-     const q = pool.query(`INSERT into food.menu_has_items(menu_id,item_id) VALUES (${menu},${item})`)
+     const weight = req.body.weight
+     const q = pool.query(`INSERT into food.menu_has_items(menu_id,item_id,weight) VALUES (${menu},${item},${weight})`)
      res.json(q)
 })
 
-app.delete("/menu:menu",async (req,res)=>{
-    const menu = req.params.menu
+app.delete("/menu:id",async (req,res)=>{
+    const menu = req.params.id
+    console.log(menu)
     const request = await pool.query(`DELETE FROM user_has_menu WHERE (menu_id = ${menu}) `)
     const request1 = await pool.query(`DELETE FROM menu WHERE (Id = ${menu}) `)
     const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu})`)
@@ -197,9 +199,13 @@ app.delete("/menu:menu",async (req,res)=>{
     res.json(request)
 })
 
-app.delete("/item",async (req,res)=>{
-   const item = req.body.item
-   const menu = req.body.menu
+
+//https://mydomain.dm/fruit/{"name":"My fruit name", "color":"The color of the fruit"}
+app.delete("/item/:object",async (req,res)=>{
+   const input = JSON.parse(req.params.object)
+   console.log(input)
+   const menu = input.menu
+   const item = input.item
    const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu} AND item_id = ${item})`)
    res.json({"res":item})
 })

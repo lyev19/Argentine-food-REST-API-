@@ -182,10 +182,14 @@ app.post("/menu-all",async(req,res)=>{
 })
 
 app.post("/item-add",async(req,res)=>{
-     const item = req.body.item 
+   console.log(req.body)
+     const item = JSON.stringify(req.body.item) 
      const menu = req.body.menu
      const weight = req.body.weight
-     const q = pool.query(`INSERT into food.menu_has_items(menu_id,item_id,weight) VALUES (${menu},${item},${weight})`)
+     console.log(typeof item)
+     console.log(typeof menu)
+     console.log(typeof weight)
+     const q = pool.query(`INSERT into menu_has_items(menu_id,item_id,weight) VALUES (${menu},${item},${weight})`)
      res.json(q)
 })
 

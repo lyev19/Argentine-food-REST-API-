@@ -156,6 +156,7 @@ app.post("/menu-items", async(req,res)=>{
 })
 
 app.post("/menu-add",async(req,res)=>{
+   console.log(req.body)
    const user = req.body.user
    const date = req.body.date
    const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 

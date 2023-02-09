@@ -112,46 +112,59 @@ app.post("/confirm",async(req,res)=>{
 
 
 
-app.use((req,res,next)=>{
-   console.log(req.headers)
- const auth = req.headers.authorization
- if (auth === null){
-    res.sendStatus(401)
- }
- jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
-    if(err) {console.log("invalid token")  
-    return res.sendStatus(404)}
+// app.use((req,res,next)=>{
+//    console.log(req.headers)
+//  const auth = req.headers.authorization
+//  if (auth === null){
+//     res.sendStatus(401)
+//  }
+//  jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
+//     if(err) {console.log("invalid token")  
+//     return res.sendStatus(404)}
    
-    next()
- })
+//     next()
+//  })
 
-})
+// })
 
 
 app.post("/menu",async(req,res)=>{
    const user= await pool.query(`SELECT id  from food.users WHERE (username = "${req.body.user}" OR email= "${req.body.user}")`)
   console.log(user)
-
-   const menu = await pool.query(`SELECT  menu.Id, menu.Date_input FROM 
+   try{
+      const menu = await pool.query(`SELECT  menu.Id, menu.Date_input FROM 
    food.user_has_menu  
    JOIN menu ON user_has_menu.menu_id = menu.Id
    WHERE user_has_menu.user_id= ${user[0][0].id}`)
 
    res.json(menu[0])
 
+   }
+   catch{
+      console.log(error)
+      res.status(404)
+   }
+   
 
 })
 
 app.post("/menu-items", async(req,res)=>{
     const menu = req.body.menu 
-    const request = await pool.query(`SELECT menu_has_items.weight, menu.Id, menu.Date_input, food1.*
-    FROM user_has_menu
-    JOIN menu ON user_has_menu.menu_id = menu.Id
-    JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
-    JOIN food1 ON menu_has_items.item_id = food1.id
-    WHERE user_has_menu.menu_id = ${menu}`)
-    console.log(request[0][0])
-    res.json(request)
+    try{
+      const request = await pool.query(`SELECT menu_has_items.weight, menu.Id, menu.Date_input, food1.*
+      FROM user_has_menu
+      JOIN menu ON user_has_menu.menu_id = menu.Id
+      JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
+      JOIN food1 ON menu_has_items.item_id = food1.id
+      WHERE user_has_menu.menu_id = ${menu}`)
+      console.log(request[0][0])
+      res.json(request)
+    }
+    catch{
+      console.log(error)
+       res.status(404)
+    }
+    
 
 })
 
@@ -159,60 +172,91 @@ app.post("/menu-add",async(req,res)=>{
    console.log(req.body)
    const user = req.body.user
    const date = req.body.date
-   const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
-   const result = await pool.query(`INSERT into menu (Date_input) VALUES ("${date}")`)
-   const adding = await pool.query(`INSERT into user_has_menu(user_id,menu_id) VALUES (${user_id[0][0].id},${result[0].insertId})`)
+   try{
+      const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
+      const result = await pool.query(`INSERT into menu (Date_input) VALUES ("${date}")`)
+      const adding = await pool.query(`INSERT into user_has_menu(user_id,menu_id) VALUES (${user_id[0][0].id},${result[0].insertId})`)
    //const menu_id = await pool.query(`SELECT Id from menu WHERE (Date_input=${date()})`)
-   res.json(result)
+      res.json(result)
+   }
+   catch(error){
+      console.log(error)
+      res.status(404)
+   }
+   
 })
 
 
 app.post("/menu-all",async(req,res)=>{
-   const user = req.body.user
-   console.log(user)
-   const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" OR email = "${user}")` )   
-   const result = await pool.query(`SELECT menu.*,menu_has_items.weight, food1.*
+   try {
+      const user = req.body.user
+       console.log(user)
+       const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" OR email = "${user}")` )   
+       const result = await pool.query(`SELECT menu.*,menu_has_items.weight, food1.*
    FROM user_has_menu
-   JOIN menu ON user_has_menu.menu_id = menu.Id
+    JOIN menu ON user_has_menu.menu_id = menu.Id
    JOIN menu_has_items ON menu.Id = menu_has_items.menu_id
    JOIN food1 ON menu_has_items.item_id = food1.id
    WHERE user_has_menu.user_id = ${user_id[0][0].id}`)
    console.log(result[0])
    res.json(result[0])
+   } catch (error) {
+      console.log(error)
+      res.status(404)
+   }
+   
   
 })
 
 app.post("/item-add",async(req,res)=>{
-   console.log(req.body)
-     const item = JSON.stringify(req.body.item) 
-     const menu = req.body.menu
-     const weight = req.body.weight
-     console.log(typeof item)
-     console.log(typeof menu)
-     console.log(typeof weight)
-     const q = pool.query(`INSERT into menu_has_items(menu_id,item_id,weight) VALUES (${menu},${item},${weight})`)
-     res.json(q)
+   try {
+      console.log(req.body)
+      const item = JSON.stringify(req.body.item) 
+      const menu = req.body.menu
+      const weight = req.body.weight
+      console.log(typeof item)
+      console.log(typeof menu)
+      console.log(typeof weight)
+      const q = pool.query(`INSERT into menu_has_items(menu_id,item_id,weight) VALUES (${menu},${item},${weight})`)
+      res.json(q)
+   } catch (error) {
+      console.log(error)
+      res.status(404)
+   }
+ 
 })
 
 app.delete("/menu:id",async (req,res)=>{
-    const menu = req.params.id
-    console.log(menu)
-    const request = await pool.query(`DELETE FROM user_has_menu WHERE (menu_id = ${menu}) `)
-    const request1 = await pool.query(`DELETE FROM menu WHERE (Id = ${menu}) `)
-    const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu})`)
-
-    res.json(request)
+   try {
+      const menu = req.params.id
+      console.log(menu)
+      const request = await pool.query(`DELETE FROM user_has_menu WHERE (menu_id = ${menu}) `)
+      const request1 = await pool.query(`DELETE FROM menu WHERE (Id = ${menu}) `)
+      const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu})`)
+  
+      res.json(request)
+   } catch (error) {
+      console.log(error)
+      res.status(404)
+   }
+  
 })
 
 
 //https://mydomain.dm/fruit/{"name":"My fruit name", "color":"The color of the fruit"}
 app.delete("/item/:object",async (req,res)=>{
-   const input = JSON.parse(req.params.object)
-   console.log(input)
-   const menu = input.menu
-   const item = input.item
-   const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu} AND item_id = ${item})`)
+   try {
+      const input = JSON.parse(req.params.object)
+      console.log(input)
+      const menu = input.menu
+      const item = input.item
+      const last = await pool.query(`DELETE FROM menu_has_items where (menu_id= ${menu} AND item_id = ${item})`)
    res.json({"res":item})
+   } catch (error) {
+      console.log(error)
+      res.status(404)
+   }
+   
 })
 
 
@@ -231,15 +275,39 @@ const tables = ["Vegetales","Carnes","Grasas","Frutas","Cereales","Lacteos","Pes
 
 
 
+// app.get("/all",async (req,res)=>{
+   
+//    try {
+//       let result=[]
+//       for(let i=0;i<tables.length;i++){
+//         let val = await pool.query(`SELECT * FROM food.${tables[i]}`)
+//         result.push(...val[0])
+//       }
+     
+//      res.json(result)
+     
+//    } catch (error) {
+//       console.log(error)
+//       res.status(404)
+//    }
+  
+// })
+
 app.get("/all",async (req,res)=>{
    
-   let result=[]
-   for(let i=0;i<tables.length;i++){
-     let val = await pool.query(`SELECT * FROM food.${tables[i]}`)
-     result.push(...val[0])
+   try {
+      let result=[]
+      
+        let val = await pool.query(`SELECT * FROM food.food1`)
+        result.push(...val[0])
+      
+     
+     res.json(result)
+     
+   } catch (error) {
+      console.log(error)
+      res.status(404)
    }
-  
-  res.json(result)
   
 })
 

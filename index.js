@@ -112,20 +112,20 @@ app.post("/confirm",async(req,res)=>{
 
 
 
-// app.use((req,res,next)=>{
-//    console.log(req.headers)
-//  const auth = req.headers.authorization
-//  if (auth === null){
-//     res.sendStatus(401)
-//  }
-//  jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
-//     if(err) {console.log("invalid token")  
-//     return res.sendStatus(404)}
+ app.use((req,res,next)=>{
+    console.log(req.headers)
+  const auth = req.headers.authorization
+  if (auth === null){
+     res.sendStatus(401)
+  }
+  jwt.verify( auth,process.env.TOKEN_SECRET,(err,user)=>{
+     if(err) {console.log("invalid token")  
+     return res.sendStatus(404)}
    
-//     next()
-//  })
+     next()
+  })
 
-// })
+ })
 
 
 app.post("/menu",async(req,res)=>{

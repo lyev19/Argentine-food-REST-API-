@@ -9,7 +9,7 @@ import * as os from "os"
 
 
 //Headers from fetch must contain jwt
-
+const food = "bjfpl7owbrfs7cdjdoua"
 
 const app = express();
 app.use(express.json())
@@ -33,7 +33,7 @@ app.use(function(req, res, next) {
    
    
    const password = req.body.passwords
-   var comparing = await pool.query (`SELECT passwords FROM food.users WHERE  username = "${req.body.username}" OR email = "${req.body.username}" `)
+   var comparing = await pool.query (`SELECT passwords FROM bjfpl7owbrfs7cdjdoua.users WHERE  username = "${req.body.username}" OR email = "${req.body.username}" `)
     
    if(comparing[0].length===0){
       console.log("incorrect email or username")
@@ -73,9 +73,9 @@ app.post("/login-request",async(req,res)=>{
        
       const password = await bcrypt.hash(req.body.passwords,8);
       console.log(req.body)
-      const ask = await pool.query (`SELECT username,email FROM food.users WHERE (username = "${req.body.username}" OR email = "${req.body.email}")`);
+      const ask = await pool.query (`SELECT username,email FROM bjfpl7owbrfs7cdjdoua.users WHERE (username = "${req.body.username}" OR email = "${req.body.email}")`);
       if(JSON.stringify(ask[0]) === "[]"){
-         const result = await pool.query( ` insert into food.users (username,email,passwords,join_date)
+         const result = await pool.query( ` insert into bjfpl7owbrfs7cdjdoua.users (username,email,passwords,join_date)
          values ("${req.body.username}","${req.body.email}","${password}","${date()}")`)
          
          res.json([{"result":"success"}])
@@ -129,11 +129,11 @@ app.post("/confirm",async(req,res)=>{
 
 
 app.post("/menu",async(req,res)=>{
-   const user= await pool.query(`SELECT id  from food.users WHERE (username = "${req.body.user}" OR email= "${req.body.user}")`)
+   const user= await pool.query(`SELECT id  from bjfpl7owbrfs7cdjdoua.users WHERE (username = "${req.body.user}" OR email= "${req.body.user}")`)
   console.log(user)
    try{
       const menu = await pool.query(`SELECT  menu.Id, menu.Date_input FROM 
-   food.user_has_menu  
+      bjfpl7owbrfs7cdjdoua.user_has_menu  
    JOIN menu ON user_has_menu.menu_id = menu.Id
    WHERE user_has_menu.user_id= ${user[0][0].id}`)
 
@@ -173,7 +173,7 @@ app.post("/menu-add",async(req,res)=>{
    const user = req.body.user
    const date = req.body.date
    try{
-      const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" || email = "${user}")` ) 
+      const user_id= await pool.query(`SELECT id FROM bjfpl7owbrfs7cdjdoua.users WHERE (username = "${user}" || email = "${user}")` ) 
       const result = await pool.query(`INSERT into menu (Date_input) VALUES ("${date}")`)
       const adding = await pool.query(`INSERT into user_has_menu(user_id,menu_id) VALUES (${user_id[0][0].id},${result[0].insertId})`)
    //const menu_id = await pool.query(`SELECT Id from menu WHERE (Date_input=${date()})`)
@@ -191,7 +191,7 @@ app.post("/menu-all",async(req,res)=>{
    try {
       const user = req.body.user
        console.log(user)
-       const user_id= await pool.query(`SELECT id FROM food.users WHERE (username = "${user}" OR email = "${user}")` )   
+       const user_id= await pool.query(`SELECT id FROM bjfpl7owbrfs7cdjdoua.users WHERE (username = "${user}" OR email = "${user}")` )   
        const result = await pool.query(`SELECT menu.*,menu_has_items.weight, food1.*
    FROM user_has_menu
     JOIN menu ON user_has_menu.menu_id = menu.Id
@@ -298,7 +298,7 @@ app.get("/all",async (req,res)=>{
    try {
       let result=[]
       
-        let val = await pool.query(`SELECT * FROM food.food1`)
+        let val = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.food1`)
         result.push(...val[0])
       
      
@@ -313,7 +313,7 @@ app.get("/all",async (req,res)=>{
 
 app.get("/vegetables/:id", async (req,res)=>{
    
-  const value = await pool.query(`SELECT * FROM food.Vegetales`)
+  const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Vegetales`)
   if(req.params.id=="all"){
   console.log(value[0][0])
    res.json(value[0])
@@ -327,7 +327,7 @@ app.get("/vegetables/:id", async (req,res)=>{
 
 app.get("/carnes/:id", async (req,res)=>{
    
-   const value = await pool.query(`SELECT * FROM food.Carnes`)
+   const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Carnes`)
    if(req.params.id=="all"){
     res.json(value[0])
    } 
@@ -340,7 +340,7 @@ app.get("/carnes/:id", async (req,res)=>{
 
 app.get("/grasas/:id", async (req,res)=>{
    
-   const value = await pool.query(`SELECT * FROM food.Grasas`)
+   const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Grasas`)
    if(req.params.id=="all"){
     res.json(value[0])
    } 
@@ -351,7 +351,7 @@ app.get("/grasas/:id", async (req,res)=>{
 
 app.get("/frutas/:id", async (req,res)=>{
    
-   const value = await pool.query(`SELECT * FROM food.Frutas`)
+   const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Frutas`)
    if(req.params.id=="all"){
     res.json(value[0])
    } 
@@ -361,7 +361,7 @@ app.get("/frutas/:id", async (req,res)=>{
 
 app.get("/lacteos/:id", async (req,res)=>{
    
-   const value = await pool.query(`SELECT * FROM food.Lacteos`)
+   const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Lacteos`)
    if(req.params.id=="all"){
     res.json(value[0])
    } 
@@ -371,7 +371,7 @@ app.get("/lacteos/:id", async (req,res)=>{
 
 app.get("/cereales/:id", async (req,res)=>{
    
-   const value = await pool.query(`SELECT * FROM food.Cereales`)
+   const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Cereales`)
    if(req.params.id=="all"){
     res.json(value[0])
    } 
@@ -381,7 +381,7 @@ app.get("/cereales/:id", async (req,res)=>{
 
 app.get("/pescados/:id", async (req,res)=>{
    
-   const value = await pool.query(`SELECT * FROM food.Pescados`)
+   const value = await pool.query(`SELECT * FROM bjfpl7owbrfs7cdjdoua.Pescados`)
    if(req.params.id=="all"){
     res.json(value[0])
    } 
